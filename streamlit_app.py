@@ -20,7 +20,7 @@ if auth_code:
 if 'creds' not in st.session_state:
     flow = InstalledAppFlow.from_client_config({ "web": st.secrets["google"] }, SCOPES, redirect_uri=st.secrets["google"]["redirect_uris"][0])
     auth_url, _ = flow.authorization_url(access_type="offline", include_granted_scopes="true")
-    st.page_link(auth_url, label="Sign in with Google")
+    st.link_button("Sign in with ACM Account", auth_url)
 else:
     data_load_state = st.text("Loading data...")
     data = get_all_judge_emails(st.session_state["creds"])
