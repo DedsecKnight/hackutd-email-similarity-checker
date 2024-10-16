@@ -4,19 +4,8 @@ import pandas as pd
 import streamlit as st
 import textdistance as td
 from bs4 import BeautifulSoup
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-NUM_ITER = 8
-
-def initialize_credentials():
-    # flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-    flow = InstalledAppFlow.from_client_config({ "web": st.secrets["google"] }, SCOPES)
-    creds = flow.run_local_server(port=0)
-    return creds
-
 
 def build_gmail_service(creds):
     try:
@@ -59,8 +48,7 @@ def build_similarity_matrix(judge_emails):
     return similarity_matrix
 
 
-def get_all_judge_emails():
-    creds = initialize_credentials()
+def get_all_judge_emails(creds):
     service = build_gmail_service(creds)
     num_judge_email = 0
     threads_req = service.users().threads().list(userId="me")
@@ -73,7 +61,7 @@ def get_all_judge_emails():
         "similarity_score": [],
     }
     found = False
-    for _ in range(NUM_ITER):
+    while True:
         threads_res = threads_req.execute()
         threads = threads_res.get("threads", [])
         for thread in threads:
