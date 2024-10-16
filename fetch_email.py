@@ -13,7 +13,7 @@ NUM_ITER = 8
 
 def initialize_credentials():
     # flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-    flow = InstalledAppFlow.from_client_config({ "installed": st.secrets["google"]}, SCOPES)
+    flow = InstalledAppFlow.from_client_config({ "web": st.secrets["google"] }, SCOPES)
     creds = flow.run_local_server(port=0)
     return creds
 
@@ -113,9 +113,9 @@ def get_all_judge_emails():
                     or "Judging" in msg_content
                 ):
                     judge_emails.append((sender, subject, msg_content))
-                    print(
-                        f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
-                    )
+                    # print(
+                    #     f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
+                    # )
                     num_judge_email += 1
                 # First ever judging email received has this subject
                 if subject == "Judging Opportunity : Hackutd":
