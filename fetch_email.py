@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# Hopefully we won't need this much
+NUM_ITER = 20
+
 def build_gmail_service(creds):
     try:
         service = build("gmail", "v1", credentials=creds)
@@ -61,7 +64,7 @@ def get_all_judge_emails(creds):
         "similarity_score": [],
     }
     found = False
-    while True:
+    for _ in range(NUM_ITER):
         threads_res = threads_req.execute()
         threads = threads_res.get("threads", [])
         for thread in threads:
