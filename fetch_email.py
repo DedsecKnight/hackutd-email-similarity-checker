@@ -1,4 +1,5 @@
 import base64
+
 import gensim.parsing.preprocessing as gsp
 import pandas as pd
 import streamlit as st
@@ -9,6 +10,20 @@ from googleapiclient.errors import HttpError
 
 # Hopefully we won't need this much
 NUM_ITER = 20
+
+
+def extract_email_content(msg):
+    if not msg.get("parts"):
+        return ""
+    for p in msg.get("parts"):
+        if p["mimeType"] in ["text/html", "text/plain"]:
+            data = p["body"]["data"]
+            data = data.replace("-", "+").replace("_", "/")
+            return base64.b64decode(data)
+        elif "parts" in p:
+            return extract_email_content(p)
+    return ""
+
 
 def build_gmail_service(creds):
     try:
@@ -84,36 +99,31 @@ def get_all_judge_emails(creds):
                 continue
             if "Major League Hacking" in sender:
                 continue
-            if not msg.get("parts"):
+            decoded_data = extract_email_content(msg)
+            if decoded_data == "":
                 continue
-            decoded_data = ""
-            for i in range(len(msg.get("parts"))):
-                if msg.get("parts")[i]["mimeType"] in ["text/html", "text/plain"]:
-                    data = msg.get("parts")[i]["body"]["data"]
-                    data = data.replace("-", "+").replace("_", "/")
-                    decoded_data = base64.b64decode(data)
-                    break
-            try:
-                soup = BeautifulSoup(decoded_data, "lxml")
-                body = soup.find_all("body")
-                msg_content = body[0].get_text()
-                if (
-                    "judge" in msg_content
-                    or "judging" in msg_content
-                    or "Judge" in msg_content
-                    or "Judging" in msg_content
-                ):
-                    judge_emails.append((sender, subject, msg_content))
-                    # print(
-                    #     f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
-                    # )
-                    num_judge_email += 1
-                # First ever judging email received has this subject
-                if subject == "Judging Opportunity : Hackutd":
+            soup = BeautifulSoup(decoded_data, "lxml")
+            body = soup.find_all("body")
+            if not body:
+                continue
+            msg_content = body[0].get_text()
+            if (
+                "judge" in msg_content
+                or "judging" in msg_content
+                or "Judge" in msg_content
+                or "Judging" in msg_content
+            ):
+                if st.secrets["params"]["sender_cutoff"] in msg_content:
                     found = True
                     break
-            except:
-                pass
+                judge_emails.append((sender, subject, msg_content))
+                print(
+                    f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
+                )
+                num_judge_email += 1
+            # try:
+            # except:
+            #     pass
         if found:
             break
         threads_req = service.users().threads().list_next(threads_req, threads_res)
