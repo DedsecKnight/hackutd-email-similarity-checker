@@ -117,13 +117,10 @@ def get_all_judge_emails(creds):
                     found = True
                     break
                 judge_emails.append((sender, subject, msg_content))
-                print(
-                    f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
-                )
+                # print(
+                #     f"Found new judging email from {sender} ({subject}) -> id = {len(judge_emails)-1}"
+                # )
                 num_judge_email += 1
-            # try:
-            # except:
-            #     pass
         if found:
             break
         threads_req = service.users().threads().list_next(threads_req, threads_res)
